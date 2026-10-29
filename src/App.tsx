@@ -24,7 +24,7 @@ import DischargePlansPage from '@/pages/doctor/DischargePlansPage';
 import MedicationManagementPage from '@/pages/doctor/MedicationManagementPage';
 import RecoveryMonitoringPage from '@/pages/doctor/RecoveryMonitoringPage';
 import FollowUpsPage from '@/pages/doctor/FollowUpsPage';
-import RiskAlertsPage from '@/pages/doctor/RiskAlertsPage';
+
 import DoctorNotificationsPage from '@/pages/doctor/NotificationsPage';
 
 function ProtectedRoute({ role, children }: { role: Role; children: React.ReactNode }) {
@@ -61,7 +61,7 @@ function AppRoutes() {
       <Route path="/doctor/medications" element={<ProtectedRoute role="doctor"><MedicationManagementPage /></ProtectedRoute>} />
       <Route path="/doctor/recovery-monitoring" element={<ProtectedRoute role="doctor"><RecoveryMonitoringPage /></ProtectedRoute>} />
       <Route path="/doctor/follow-ups" element={<ProtectedRoute role="doctor"><FollowUpsPage /></ProtectedRoute>} />
-      <Route path="/doctor/risk-alerts" element={<ProtectedRoute role="doctor"><RiskAlertsPage /></ProtectedRoute>} />
+
       <Route path="/doctor/notifications" element={<ProtectedRoute role="doctor"><DoctorNotificationsPage /></ProtectedRoute>} />
       <Route path="/doctor/profile" element={<ProtectedRoute role="doctor"><ProfilePage /></ProtectedRoute>} />
 

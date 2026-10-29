@@ -4,7 +4,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Avatar } from '@/components/ui/Avatar';
 import { appointments, patients } from '@/data/mockData';
 import { formatDate, classNames } from '@/lib/utils';
-import type { AppointmentStatus } from '@/types';
+import type { Appointment, AppointmentStatus } from '@/types';
 
 const statusConfig: Record<AppointmentStatus, { label: string; badge: string }> = {
   confirmed: { label: 'Confirmed', badge: 'bg-success-100 text-success-700' },
@@ -40,7 +40,7 @@ export default function PatientAppointmentsPage() {
   };
 
   const days = getDaysInMonth(currentMonth);
-  const today = 27;
+  const today = new Date().getDate();
 
   return (
     <div className="space-y-6">
@@ -122,7 +122,10 @@ export default function PatientAppointmentsPage() {
               if (d === null) return <div key={i} />;
               const dateStr = `2026-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
               const hasAppt = apptDates.has(dateStr);
-              const isToday = d === today && currentMonth.getMonth() === 7;
+              const isToday =
+                d === today &&
+                currentMonth.getMonth() === new Date().getMonth() &&
+                currentMonth.getFullYear() === new Date().getFullYear();
               return (
                 <div
                   key={i}

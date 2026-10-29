@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from 'react';
+import { useState, useCallback, useEffect, type ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -23,6 +23,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Logo } from '@/components/ui/Logo';
 import { Avatar } from '@/components/ui/Avatar';
 import { classNames } from '@/lib/utils';
+import { patients, medications } from '@/data/mockData';
 
 interface NavItem {
   to: string;
@@ -48,7 +49,7 @@ const doctorNav: NavItem[] = [
   { to: '/doctor/medications', label: 'Medication Monitoring', icon: Pill },
   { to: '/doctor/recovery-monitoring', label: 'Recovery Monitoring', icon: Activity },
   { to: '/doctor/follow-ups', label: 'Follow-Up Management', icon: CalendarClock },
-  { to: '/doctor/risk-alerts', label: 'Risk Alerts', icon: AlertTriangle },
+
   { to: '/doctor/notifications', label: 'Notifications', icon: Bell },
   { to: '/doctor/profile', label: 'Profile', icon: UserIcon },
 ];
@@ -60,6 +61,45 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ label: string; href: string; sub: string; category: string }>>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
+
+    const results: Array<{ label: string; href: string; sub: string; category: string }> = [];
+
+    patients.forEach((p) => {
+      if (p.name.toLowerCase().includes(q) || p.patientId.toLowerCase().includes(q) || p.surgery.toLowerCase().includes(q)) {
+        results.push({
+          label: p.name,
+          href: user?.role === 'doctor' ? `/doctor/patients/${p.id}` : `/patient/dashboard`,
+          sub: `${p.surgery} · ${p.patientId}`,
+          category: 'Patient',
+        });
+      }
+    });
+
+    const seenMeds = new Set<string>();
+    medications.forEach((m) => {
+      if (m.name.toLowerCase().includes(q) && !seenMeds.has(m.name.toLowerCase())) {
+        seenMeds.add(m.name.toLowerCase());
+        results.push({
+          label: m.name,
+          href: user?.role === 'doctor' ? `/doctor/medications` : `/patient/medications`,
+          sub: `${m.dosage} · ${m.frequency}`,
+          category: 'Medication',
+        });
+      }
+    });
+
+    setSearchResults(results.slice(0, 6));
+  }, [searchQuery, user?.role]);
 
   const nav = user?.role === 'doctor' ? doctorNav : patientNav;
   const notifPath = user?.role === 'doctor' ? '/doctor/notifications' : '/patient/notifications';
@@ -185,9 +225,39 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search patients, meds..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
                 className="w-48 rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20"
               />
+              {searchOpen && searchResults.length > 0 && (
+                <div className="absolute left-0 top-full z-50 mt-1.5 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-elevated">
+                  {searchResults.map((r, i) => (
+                    <NavLink
+                      key={i}
+                      to={r.href}
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSearchOpen(false);
+                      }}
+                      className="flex items-center justify-between px-3.5 py-2 hover:bg-slate-50"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">{r.label}</p>
+                        <p className="text-xs text-slate-500">{r.sub}</p>
+                      </div>
+                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                        {r.category}
+                      </span>
+                    </NavLink>
+                  ))}
+                </div>
+              )}
             </div>
 
             <NavLink

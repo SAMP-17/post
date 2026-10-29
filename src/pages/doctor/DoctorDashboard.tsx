@@ -14,12 +14,23 @@ export default function DoctorDashboard() {
   const firstName = user?.name?.replace(/^Dr\.\s*/, '').split(' ')[0] || 'Priya';
 
   const highRisk = patients.filter((p) => p.risk === 'high' || p.risk === 'critical').length;
-  const todaysAppts = appointments.filter((a) => a.date === '2026-08-27').length;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todaysAppts = appointments.filter((a) => a.date === todayStr).length;
+  const avgAdherence = Math.round(
+    patients.reduce((s, p) => s + p.medicationAdherence, 0) / (patients.length || 1)
+  );
   const activeAlerts = riskAlerts.filter((a) => a.status === 'active').length;
 
   const recentPatients = [...patients].sort((a, b) => {
-    const order = { '30 minutes ago': 0, '1 hour ago': 1, '2 hours ago': 2, '3 hours ago': 3, '5 hours ago': 4 };
-    return 0;
+
+    const getPriority = (str: string) => {
+      if (str.includes('minute')) return 0;
+      if (str.includes('hour')) return 1;
+      if (str.includes('Today')) return 2;
+      if (str.includes('Yesterday')) return 3;
+      return 4;
+    };
+    return getPriority(a.lastUpdate) - getPriority(b.lastUpdate);
   }).slice(0, 6);
 
   return (
@@ -35,7 +46,7 @@ export default function DoctorDashboard() {
         <StatCard label="Total Patients" value={patients.length} icon={Users} color="primary" trend="3 new this week" trendUp />
         <StatCard label="High-Risk Patients" value={highRisk} icon={AlertTriangle} color="error" trend="Requires attention" />
         <StatCard label="Follow-Ups Today" value={todaysAppts} icon={CalendarClock} color="teal" trend="2 pending confirmation" />
-        <StatCard label="Medication Adherence" value="89%" icon={Pill} color="accent" trend="+2% vs last week" trendUp />
+        <StatCard label="Medication Adherence" value={`${avgAdherence}%`} icon={Pill} color="accent" trend="+2% vs last week" trendUp />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -74,7 +85,7 @@ export default function DoctorDashboard() {
             centerLabel="Total"
             centerValue={patients.length}
           />
-          <Link to="/doctor/risk-alerts" className="mt-4 flex items-center justify-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
+          <Link to="/doctor/patients" className="mt-4 flex items-center justify-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
             View all alerts <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -138,7 +149,7 @@ export default function DoctorDashboard() {
       <div className="card p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900">Active Risk Alerts</h2>
-          <Link to="/doctor/risk-alerts" className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
+          <Link to="/doctor/patients" className="flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700">
             View all <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
