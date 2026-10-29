@@ -33,7 +33,8 @@ app.use(
 );
 app.use(express.json());
 
-// Health check
+// Root & Health check
+app.get('/', (_, res) => res.json({ message: '🏥 CareTrack API is live and running', health: '/api/health' }));
 app.get('/api/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // Routes
